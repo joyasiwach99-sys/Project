@@ -1,0 +1,46 @@
+{
+  "name": "smartroute-guardian",
+  "private": true,
+  "version": "1.0.0",
+  "description": "SmartRoute Guardian \u2014 RFID-verified last-mile logistics intelligence system (web dashboards + Firebase backend).",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit -p . && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit -p .",
+    "test": "vitest run",
+    "deploy": "npm run build && firebase deploy --only hosting",
+    "setup": "vite-node scripts/setup-demo.ts",
+    "setup:seed": "vite-node scripts/setup-demo.ts --seed",
+    "deploy:backend": "firebase deploy --only auth,firestore:rules,firestore:indexes",
+    "test:rules": "vite-node scripts/test-rules.ts"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "firebase": "^12.19.0",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^0.468.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-leaflet": "^4.2.1",
+    "react-router-dom": "^6.30.1",
+    "recharts": "^2.15.4",
+    "tailwind-merge": "^2.6.0"
+  },
+  "devDependencies": {
+    "@types/leaflet": "^1.9.12",
+    "@types/node": "^22.10.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.7.0",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "typescript": "~5.9.3",
+    "vite": "^5.4.21",
+    "vitest": "^2.1.8",
+    "vite-node": "^2.1.9"
+  }
+}

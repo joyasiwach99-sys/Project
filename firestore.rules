@@ -1,0 +1,191 @@
+rules_version = '2';
+
+// SmartRoute Guardian — Firestore security rules
+//
+// Roles live in users/{uid}.role:
+//   admin   – full operations control
+//   viewer  – read-only access to every dashboard (reviewers, judges, partners)
+//   driver  – sees everything, may only act on their own vehicle / route
+//   device  – Raspberry Pi RFID gateway; may only write for the vehicle it is mounted in
+//   pending – signed up, waiting for an admin to approve
+//
+// The audit trail (events) is append-only: nobody can edit an event, and
+// non-admin writers must use the server clock for createdAt.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------------------------------------------------------------- helpers
+    function signedIn() { return request.auth != null; }
+    function mePath() { return /databases/$(database)/documents/users/$(request.auth.uid); }
+    function hasProfile() { return signedIn() && exists(mePath()); }
+    function profile() { return get(mePath()).data; }
+    function role() { return hasProfile() ? profile().role : 'none'; }
+
+    function isAdmin() { return role() == 'admin'; }
+    function isDriver() { return role() == 'driver'; }
+    function isDevice() { return role() == 'device'; }
+    function isStaff() { return role() in ['admin', 'driver', 'viewer', 'device']; }
+    function isWriter() { return role() in ['admin', 'driver', 'device']; }
+
+    function myVehicle() { return profile().get('vehicleId', '__none__'); }
+    function myDevice() { return profile().get('deviceId', '__none__'); }
+
+    function onlyChanges(keys) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys);
+    }
+    function serverStamped() { return request.resource.data.createdAt == request.time; }
+
+    // First administrator(s). Add your own email here and redeploy to bootstrap
+    // a new project; afterwards promote people from Admin → People.
+    function bootstrapAdmin() {
+      return signedIn() && request.auth.token.email in ['admin@smartroute.demo'];
+    }
+
+    // ------------------------------------------------------------------ users
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isStaff());
+
+      // Self sign-up always starts as "pending" (or admin for bootstrap emails).
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.email == request.auth.token.email
+        && (request.resource.data.role == 'pending'
+            || (request.resource.data.role == 'admin' && bootstrapAdmin()));
+
+      // Admins can create profiles for drivers / devices / viewers.
+      allow create, delete: if isAdmin();
+
+      allow update: if isAdmin()
+        || (signedIn() && request.auth.uid == uid
+            && onlyChanges(['name', 'phone', 'updatedAt']));
+    }
+
+    // --------------------------------------------------------------- vehicles
+    match /vehicles/{vid} {
+      allow read: if isStaff();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin()
+        || (isDevice() && myVehicle() == vid
+            && onlyChanges(['presentEpcs', 'presentCount', 'lastScanAt', 'readerOnline',
+                            'location', 'status', 'updatedAt']))
+        || (isDriver() && myVehicle() == vid
+            && onlyChanges(['status', 'location', 'activeRouteId', 'updatedAt']));
+    }
+
+    // ---------------------------------------------------------------- parcels
+    match /parcels/{pid} {
+      allow read: if isStaff();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin()
+        // A gateway may record that it physically sees ANY parcel (this is how
+        // wrong-vehicle loads are caught) — but only claim it for / release it
+        // from its own vehicle.
+        || (isDevice()
+            && onlyChanges(['inVehicleId', 'lastSeenAt', 'updatedAt'])
+            && (request.resource.data.inVehicleId == myVehicle()
+                || resource.data.inVehicleId == myVehicle()))
+        // ...and drive the lifecycle of parcels on its own manifest.
+        || (isDevice() && resource.data.vehicleId == myVehicle()
+            && onlyChanges(['status', 'inVehicleId', 'lastSeenAt', 'loadedAt',
+                            'leftVehicleAt', 'updatedAt']))
+        // Drivers confirm delivery / report exceptions on their own manifest.
+        || (isDriver() && resource.data.vehicleId == myVehicle()
+            && request.resource.data.status in ['loaded', 'in_transit', 'delivered', 'exception']
+            && onlyChanges(['status', 'deliveredAt', 'deliveryProof', 'inVehicleId',
+                            'leftVehicleAt', 'updatedAt']));
+    }
+
+    // ----------------------------------------------------------------- routes
+    match /routes/{rid} {
+      allow read: if isStaff();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin()
+        || (isDriver()
+            && (resource.data.driverId == request.auth.uid || resource.data.vehicleId == myVehicle())
+            && onlyChanges(['status', 'loadVerification', 'loadVerifiedAt', 'startedAt',
+                            'completedAt', 'deliveredCount', 'updatedAt']))
+        || (isDevice() && resource.data.vehicleId == myVehicle()
+            && onlyChanges(['loadVerification', 'loadVerifiedAt', 'updatedAt']));
+    }
+
+    // ------------------------------------------------- audit trail (append-only)
+    match /events/{eid} {
+      allow read: if isStaff();
+      allow create: if isAdmin()
+        || (serverStamped() && isDriver()
+            && request.resource.data.actor.type == 'driver'
+            && request.resource.data.actor.id == request.auth.uid)
+        || (serverStamped() && isDevice()
+            && request.resource.data.actor.type == 'device'
+            && request.resource.data.vehicleId == myVehicle());
+      allow update: if false;
+      allow delete: if isAdmin(); // demo-data reset only
+    }
+
+    // ----------------------------------------------------------------- alerts
+    match /alerts/{aid} {
+      allow read: if isStaff();
+      allow create: if isAdmin()
+        || ((isDriver() || isDevice())
+            && serverStamped()
+            && request.resource.data.status == 'open'
+            && request.resource.data.vehicleId == myVehicle());
+      allow update: if isAdmin()
+        || ((isDriver() || isDevice()) && resource.data.vehicleId == myVehicle()
+            && onlyChanges(['status', 'acknowledgedAt', 'acknowledgedBy', 'resolvedAt',
+                            'resolvedBy', 'resolution']));
+      allow delete: if isAdmin();
+    }
+
+    // ------------------------------------------------------- RFID gateways
+    match /devices/{did} {
+      allow read: if isStaff();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin()
+        || (isDevice() && myDevice() == did
+            && onlyChanges(['lastHeartbeat', 'stats', 'ip', 'firmware', 'updatedAt']));
+    }
+
+    // ------------------------------------------- dispatch <-> driver messages
+    match /messages/{mid} {
+      allow read: if isAdmin() || role() == 'viewer'
+        || (isDriver() && resource.data.threadId == request.auth.uid);
+      // Admins may load the flagged demo conversation; real messages must come from their sender.
+      allow create: if (isAdmin() && request.resource.data.get('demo', false) == true);
+      allow create: if signedIn()
+        && request.resource.data.fromId == request.auth.uid
+        && serverStamped()
+        && request.resource.data.text is string
+        && request.resource.data.text.size() > 0
+        && request.resource.data.text.size() <= 1000
+        && (isAdmin() || (isDriver() && request.resource.data.threadId == request.auth.uid));
+      allow delete: if isAdmin();
+    }
+
+    // ------------------------------------------- pilot validation + settings
+    match /pilotTrials/{tid} {
+      allow read: if isStaff();
+      allow write: if isAdmin();
+    }
+
+    match /settings/{sid} {
+      allow read: if isStaff();
+      allow write: if isAdmin();
+    }
+
+    // ------------------------------------- public customer tracking (get only)
+    match /publicTracking/{trackingId} {
+      allow get: if true;
+      allow list: if false;
+      allow create, delete: if isAdmin();
+      // Drivers and gateways may only advance the status/timeline, never edit customer details.
+      allow update: if isAdmin()
+        || (isWriter() && onlyChanges(['status', 'timeline', 'updatedAt']));
+    }
+
+    // Everything else is closed.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

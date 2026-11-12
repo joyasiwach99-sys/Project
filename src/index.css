@@ -1,0 +1,139 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------------------------
+   SmartRoute Guardian design tokens
+   Palette: deep navy + white + light gray, tracking blue for actions,
+   orange/red reserved for alerts (per project brief, checked with the
+   ui-ux-pro-max "Logistics/Delivery" + "B2B navy" palettes).
+   All text pairs meet WCAG AA 4.5:1 on their intended surface.
+------------------------------------------------------------------- */
+:root {
+  --c-bg: 244 246 250;
+  --c-surface: 255 255 255;
+  --c-surface-2: 238 242 247;
+  --c-border: 222 228 238;
+  --c-fg: 15 23 42;
+  --c-fg-muted: 71 85 105;
+  --c-fg-subtle: 100 116 139;
+
+  --c-navy: 11 31 58;
+  --c-navy-2: 20 44 80;
+  --c-navy-fg: 226 232 240;
+
+  --c-primary: 37 99 235;
+  --c-primary-fg: 255 255 255;
+  --c-primary-soft: 219 234 254;
+
+  --c-success: 21 128 61;
+  --c-success-soft: 220 252 231;
+  --c-warning: 194 65 12;
+  --c-warning-soft: 255 237 213;
+  --c-danger: 200 30 30;
+  --c-danger-soft: 254 226 226;
+  --c-orange: 234 88 12;
+
+  color-scheme: light;
+}
+
+.dark {
+  --c-bg: 7 13 26;
+  --c-surface: 13 22 40;
+  --c-surface-2: 21 33 56;
+  --c-border: 35 49 76;
+  --c-fg: 226 232 240;
+  --c-fg-muted: 160 174 196;
+  --c-fg-subtle: 128 144 168;
+
+  --c-navy: 5 11 24;
+  --c-navy-2: 16 30 54;
+  --c-navy-fg: 203 213 225;
+
+  --c-primary: 96 165 250;
+  --c-primary-fg: 7 13 26;
+  --c-primary-soft: 23 42 77;
+
+  --c-success: 74 222 128;
+  --c-success-soft: 16 48 34;
+  --c-warning: 251 146 60;
+  --c-warning-soft: 58 32 14;
+  --c-danger: 248 113 113;
+  --c-danger-soft: 62 20 24;
+  --c-orange: 251 146 60;
+
+  color-scheme: dark;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-bg font-sans text-[15px] leading-relaxed text-fg antialiased;
+    min-height: 100dvh;
+  }
+  h1, h2, h3, h4 {
+    @apply font-display tracking-tight text-fg;
+    text-wrap: balance;
+  }
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-2 ring-offset-bg;
+  }
+  button, [role="button"], a, select, summary, label[for] {
+    touch-action: manipulation;
+  }
+  button:not(:disabled), [role="button"], a, select, summary {
+    cursor: pointer;
+  }
+  ::selection {
+    background: rgb(var(--c-primary) / 0.2);
+  }
+}
+
+@layer components {
+  .tabular { font-variant-numeric: tabular-nums; }
+  .epc { @apply font-mono text-[12px] tracking-tight; overflow-wrap: anywhere; }
+  .card { @apply rounded-xl border border-border bg-surface shadow-card; }
+  .label { @apply text-[13px] font-semibold text-fg; }
+  .help { @apply text-[13px] text-fg-muted; }
+  .skip-link {
+    @apply sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-fg;
+  }
+}
+
+/* Leaflet theming */
+.leaflet-container {
+  font-family: "Source Sans 3", system-ui, sans-serif;
+  background: rgb(var(--c-surface-2));
+  border-radius: inherit;
+}
+.leaflet-popup-content-wrapper, .leaflet-popup-tip {
+  background: rgb(var(--c-surface));
+  color: rgb(var(--c-fg));
+  box-shadow: 0 10px 30px -8px rgb(15 23 42 / 0.35);
+}
+.leaflet-popup-content { margin: 12px 14px; font-size: 14px; line-height: 1.45; }
+.leaflet-control-attribution { font-size: 10px; }
+.dark .leaflet-control-attribution { background: rgb(13 22 40 / 0.8) !important; color: #94a3b8; }
+.dark .leaflet-control-attribution a { color: #93c5fd; }
+.dark .leaflet-bar a { background: rgb(var(--c-surface)); color: rgb(var(--c-fg)); border-color: rgb(var(--c-border)); }
+
+.srg-marker { background: transparent; border: 0; }
+.dark .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.88) saturate(0.6); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff; }
+  .card { box-shadow: none; break-inside: avoid; }
+}

@@ -1,0 +1,2 @@
+# runtime files (the repo root .gitignore covers .venv, config.json, *.sqlite)
+*.lock

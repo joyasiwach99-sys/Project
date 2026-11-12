@@ -1,0 +1,32 @@
+# SmartRoute Guardian RFID gateway - systemd unit TEMPLATE.
+#
+# @DEVICE_DIR@ and @USER@ are placeholders; install.sh prints the exact
+# command that fills them in and copies the result to /etc/systemd/system/.
+# The service runs as that (non-root) user.
+
+[Unit]
+Description=SmartRoute Guardian RFID gateway
+Documentation=file://@DEVICE_DIR@/README.md
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=@USER@
+# Serial ports (/dev/ttyUSB*, /dev/serial0) belong to the dialout group.
+SupplementaryGroups=dialout
+WorkingDirectory=@DEVICE_DIR@
+ExecStart=@DEVICE_DIR@/.venv/bin/python -m smartroute_gateway --config @DEVICE_DIR@/config.json
+Environment=PYTHONUNBUFFERED=1
+Restart=always
+RestartSec=5
+# Gives the gateway time to mark the reader offline and flush the outbox.
+TimeoutStopSec=60
+
+# Hardening: the gateway only writes its own directory (outbox.sqlite).
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

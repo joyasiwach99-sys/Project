@@ -1,0 +1,58 @@
+{
+  "firebase": {
+    "apiKey": "AIzaSyDhAYCN5CJ-GGVzdAl7dzp4LnIsn8rMEJM",
+    "projectId": "project-e0bb4"
+  },
+  "device": {
+    "email": "device-van01@smartroute.demo",
+    "password": "CHANGE_ME",
+    "deviceId": "RDR-01",
+    "vehicleId": "VAN-01"
+  },
+  "reader": {
+    "backend": "chafon",
+    "port": "/dev/ttyUSB0",
+    "baud": 57600,
+    "address": "0xFF",
+    "inventoryIntervalMs": 1000,
+    "responseTimeoutMs": 1000,
+    "txPowerDbm": null,
+    "commands": {
+      "inventory": "0x01",
+      "inventoryData": "",
+      "getInfo": "0x21",
+      "setPower": "0x2F"
+    },
+    "responseLayout": {
+      "antennaByte": false,
+      "rssiByte": false
+    },
+    "minEpcBytes": 12,
+    "simulated": {
+      "tags": [],
+      "missProbability": 0.1
+    }
+  },
+  "gps": {
+    "backend": "nmea",
+    "port": "/dev/serial0",
+    "baud": 9600,
+    "maxFixAgeSec": 5,
+    "simulated": {
+      "speedKmh": 25,
+      "waypoints": [
+        [28.5011, 77.0838],
+        [28.4950, 77.0890],
+        [28.4683, 77.0645]
+      ]
+    }
+  },
+  "engine": {
+    "absenceTimeoutSec": 6,
+    "geofenceM": 150
+  },
+  "heartbeatSec": 15,
+  "parcelRefreshSec": 30,
+  "routeRefreshSec": 10,
+  "queuePath": "outbox.sqlite"
+}

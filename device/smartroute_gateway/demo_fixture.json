@@ -1,0 +1,130 @@
+{
+  "vehicles": {
+    "VAN-01": {
+      "name": "Van 01",
+      "plate": "DEMO-0001",
+      "type": "van",
+      "capacity": 40,
+      "driverId": null,
+      "deviceId": "RDR-01",
+      "status": "en_route",
+      "activeRouteId": "R-DEMO",
+      "presentEpcs": [],
+      "presentCount": 0,
+      "readerOnline": false
+    }
+  },
+  "routes": {
+    "R-DEMO": {
+      "code": "DEMO-001",
+      "date": "2026-01-01",
+      "vehicleId": "VAN-01",
+      "driverId": null,
+      "status": "in_progress",
+      "parcelIds": ["P-DEMO-1", "P-DEMO-2", "P-DEMO-3"],
+      "stopCount": 3,
+      "deliveredCount": 1,
+      "hub": { "name": "Demo Hub", "lat": 28.5011, "lng": 77.0838 }
+    }
+  },
+  "parcels": {
+    "P-DEMO-1": {
+      "trackingId": "SRG-DEMO01",
+      "epc": "E28011700000020000000001",
+      "recipientName": "Demo Recipient A",
+      "address": "Demo address A",
+      "area": "Cyber City",
+      "city": "Gurugram",
+      "lat": 28.495,
+      "lng": 77.089,
+      "weightKg": 1.2,
+      "size": "S",
+      "priority": "standard",
+      "status": "assigned",
+      "vehicleId": "VAN-01",
+      "routeId": "R-DEMO",
+      "stopSeq": 1,
+      "inVehicleId": null
+    },
+    "P-DEMO-2": {
+      "trackingId": "SRG-DEMO02",
+      "epc": "E28011700000020000000002",
+      "recipientName": "Demo Recipient B",
+      "address": "Demo address B",
+      "area": "Sector 29",
+      "city": "Gurugram",
+      "lat": 28.4683,
+      "lng": 77.0645,
+      "weightKg": 2.5,
+      "size": "M",
+      "priority": "express",
+      "status": "assigned",
+      "vehicleId": "VAN-01",
+      "routeId": "R-DEMO",
+      "stopSeq": 2,
+      "inVehicleId": null
+    },
+    "P-DEMO-3": {
+      "trackingId": "SRG-DEMO03",
+      "epc": "E28011700000020000000003",
+      "recipientName": "Demo Recipient C",
+      "address": "Demo address C",
+      "area": "Sector 29",
+      "city": "Gurugram",
+      "lat": 28.469,
+      "lng": 77.065,
+      "weightKg": 0.8,
+      "size": "S",
+      "priority": "standard",
+      "status": "delivered",
+      "vehicleId": "VAN-01",
+      "routeId": "R-DEMO",
+      "stopSeq": 3,
+      "inVehicleId": null
+    },
+    "P-DEMO-4": {
+      "trackingId": "SRG-DEMO04",
+      "epc": "E28011700000020000000004",
+      "recipientName": "Demo Recipient D",
+      "address": "Demo address D",
+      "area": "DLF Phase 2",
+      "city": "Gurugram",
+      "lat": 28.4877,
+      "lng": 77.0939,
+      "weightKg": 3.1,
+      "size": "L",
+      "priority": "standard",
+      "status": "loaded",
+      "vehicleId": "VAN-02",
+      "routeId": "R-OTHER",
+      "stopSeq": 1,
+      "inVehicleId": "VAN-02"
+    }
+  },
+  "devices": {
+    "RDR-01": {
+      "vehicleId": "VAN-01",
+      "model": "CHAFON CF591",
+      "firmware": "unknown",
+      "config": { "txPowerDbm": 20, "absenceTimeoutSec": 6, "geofenceM": 150, "heartbeatSec": 15 }
+    }
+  },
+  "publicTracking": {
+    "SRG-DEMO01": {
+      "trackingId": "SRG-DEMO01",
+      "status": "assigned",
+      "area": "Cyber City",
+      "city": "Gurugram",
+      "recipientInitials": "D.R.",
+      "timeline": []
+    },
+    "SRG-DEMO02": {
+      "trackingId": "SRG-DEMO02",
+      "status": "assigned",
+      "area": "Sector 29",
+      "city": "Gurugram",
+      "recipientInitials": "D.R.",
+      "timeline": []
+    }
+  }
+}
